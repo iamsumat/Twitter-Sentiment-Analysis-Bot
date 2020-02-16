@@ -8,8 +8,8 @@ import credentials
 import numpy as np
 import pandas as pd
 
-class TwitterClient(): # TWITTER CLIENT
 
+class TwitterClient():  # TWITTER CLIENT
     def __init__(self, twitter_user=None):
         self.auth = Twitter_Authenticator().authenticate_app()
         self.twitter_client = API(auth_handler = self.auth)
@@ -36,6 +36,7 @@ class TwitterClient(): # TWITTER CLIENT
             home_timeline_tweets.append(tweet)
         return home_timeline_tweets
 
+
 class Twitter_Authenticator(): # TWITTER AUTHENTICATOR
     '''
     Class for authenticating Twitter app.
@@ -47,14 +48,13 @@ class Twitter_Authenticator(): # TWITTER AUTHENTICATOR
         return auth
 
 
-class Twitter_Streamer(): # TWITTER STREAMER
-    '''
-    Class for streaming and processing live streams.
-    '''
+class TwitterStreamer():  # TWITTER STREAMER
+    """
+        Class for streaming and processing live streams.
+    """
 
     def __init__(self):
         self.twitter_authenticate = Twitter_Authenticator()
-        pass
 
     def stream_tweets(self, json_filename, hash_list):
         # This handles Twitter authentication and the connection to Twitter API.
@@ -65,9 +65,9 @@ class Twitter_Streamer(): # TWITTER STREAMER
 
 
 class TwitterListener(StreamListener): # TWITTER STREAM LISTENER
-    '''
-    Standard listener class that prints recieved tweets to StdOut.
-    '''
+    """
+        Standard listener class that prints received tweets to StdOut.
+    """
 
     def __init__(self, json_filename):
         self.json_filename = json_filename
@@ -86,21 +86,23 @@ class TwitterListener(StreamListener): # TWITTER STREAM LISTENER
             return False
         print(status_code)
 
+
 class TweetAnalyzer():
-    '''
+    """
     Functionality for analyzing and categorizing content from tweets.
-    '''
+    """
+
     def tweets_to_df(self, tweets):
         df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['Tweets'])
         return df
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     twitter_client = TwitterClient()
     tweet_analyzer = TweetAnalyzer()
     api = twitter_client.get_twitter_client_api()
 
-    tweets = api.user_timeline(screen_name = "ILLENIUMMUSIC", count = 20)
+    tweets = api.user_timeline(screen_name="ILLENIUMMUSIC", count=20)
 
     print(dir(tweets[0]))
 
