@@ -108,4 +108,3 @@ if __name__ == "__main__":
 
     # df = tweet_analyzer.tweets_to_df(tweets)
     # print(df.head())
-    # 56:36
