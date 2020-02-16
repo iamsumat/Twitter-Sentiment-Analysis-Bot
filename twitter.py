@@ -37,10 +37,10 @@ class TwitterClient():  # TWITTER CLIENT
         return home_timeline_tweets
 
 
-class Twitter_Authenticator(): # TWITTER AUTHENTICATOR
-    '''
-    Class for authenticating Twitter app.
-    '''
+class Twitter_Authenticator():  # TWITTER AUTHENTICATOR
+    """
+        Class for authenticating Twitter app.
+    """
 
     def authenticate_app(self):
         auth = OAuthHandler(credentials.CONSUMER_KEY, credentials.CONSUMER_SECRET)
@@ -73,6 +73,8 @@ class TwitterListener(StreamListener): # TWITTER STREAM LISTENER
         self.json_filename = json_filename
 
     def on_data(self, raw_data):
+        # Overrides method in StreamListener Class
+
         try:
             print(raw_data)
             with open(self.json_filename, 'a') as tf:
@@ -82,7 +84,9 @@ class TwitterListener(StreamListener): # TWITTER STREAM LISTENER
             print("Error on data: %s" % str(e))
 
     def on_error(self, status_code):
-        if status_code == 420: # Returning False on_data method in case Twitter rate limit occurs.
+        # Overrides method in StreamListener Class
+
+        if status_code == 420:  # Returning False on_data method in case Twitter rate limit occurs.
             return False
         print(status_code)
 
@@ -93,8 +97,27 @@ class TweetAnalyzer():
     """
 
     def tweets_to_df(self, tweets):
-        df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['Tweets'])
+        # Initialize df and loop through all tweet data for every column
+
+        df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweets'])
+        df['id'] = np.array([tweet.id for tweet in tweets])
+        df['len'] = np.array([len(tweet.text) for tweet in tweets])
+        df['date'] = np.array([tweet.created_at for tweet in tweets])
+        df['source'] = np.array([tweet.source for tweet in tweets])
+        df['retweets'] = np.array([tweet.retweet_count for tweet in tweets])
+        # df['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
         return df
+
+    def get_tweet_likes(self, tweets):
+        likedf = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweets'])
+        try:
+            likedf['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
+        except AttributeError:
+            likedf['likes'] = np.array([tweet.favorite_count for tweet in tweets])
+        # finally:
+        #     likedf['likes'] = np.array([tweet.favorite_count for tweet in tweets])
+
+        return likedf
 
 
 if __name__ == "__main__":
@@ -102,9 +125,16 @@ if __name__ == "__main__":
     tweet_analyzer = TweetAnalyzer()
     api = twitter_client.get_twitter_client_api()
 
-    tweets = api.user_timeline(screen_name="ILLENIUMMUSIC", count=20)
+    tweets = api.user_timeline(screen_name="realDonaldTrump", count=30)  # user_timeline fn to set username and count
 
-    print(dir(tweets[0]))
+    # tdf = tweet_analyzer.tweets_to_df(tweets)
+    tdf = tweet_analyzer.get_tweet_likes(tweets)
+    print(tdf.likes)
 
-    # df = tweet_analyzer.tweets_to_df(tweets)
-    # print(df.head())
+
+    # print(tweets[0].retweeted_status.favorite_count)
+    # # Get average length of all tweets
+    # print(np.mean(tdf['len']))
+
+    # # Get number of likes of the most liked tweet
+    # print(np.max(tdf['likes']))
