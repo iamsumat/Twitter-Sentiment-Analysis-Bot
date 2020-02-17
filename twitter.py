@@ -7,6 +7,7 @@ from tweepy import Stream
 import credentials
 import numpy as np
 import pandas as pd
+import json
 
 
 class TwitterClient():  # TWITTER CLIENT
@@ -106,18 +107,26 @@ class TweetAnalyzer():
         df['source'] = np.array([tweet.source for tweet in tweets])
         df['retweets'] = np.array([tweet.retweet_count for tweet in tweets])
         # df['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
+
+        # 1st METHOD -
+        for tweet in tweets:
+            if 'retweeted_status' in tweets:
+                df['likes'] = df.append(pd.Series(tweet.retweeted_status.favorite_count), ignore_index=True)
+            else:
+                df['likes'] = df.append(pd.Series(tweet.favorite_count), ignore_index=True)
+
+        # # 2nd METHOD -
+        # df['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
+
         return df
 
-    def get_tweet_likes(self, tweets):
-        likedf = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweets'])
-        try:
-            likedf['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
-        except AttributeError:
-            likedf['likes'] = np.array([tweet.favorite_count for tweet in tweets])
-        # finally:
-        #     likedf['likes'] = np.array([tweet.favorite_count for tweet in tweets])
-
-        return likedf
+    # def get_tweet_likes(self, tweets):
+    #     likedf = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweets'])
+    #     try:
+    #         likedf['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
+    #     except AttributeError:
+    #         likedf['likes'] = np.array([tweet.favorite_count for tweet in tweets])
+    #     return likedfni
 
 
 if __name__ == "__main__":
@@ -127,8 +136,15 @@ if __name__ == "__main__":
 
     tweets = api.user_timeline(screen_name="realDonaldTrump", count=30)  # user_timeline fn to set username and count
 
-    # tdf = tweet_analyzer.tweets_to_df(tweets)
-    tdf = tweet_analyzer.get_tweet_likes(tweets)
+    # for i in range(100):
+    #     tweets = tweets_list[i]
+    #     tweets_str = json.dumps(tweets._json)
+    #     with open("Donald.json",'a') as tf:
+    #         tf.write(tweets_str)
+    #     print("Done %d" %i)
+
+    tdf = tweet_analyzer.tweets_to_df(tweets)
+    # tdf = tweet_analyzer.get_tweet_likes(tweets)
     print(tdf.likes)
 
 
