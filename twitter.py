@@ -4,10 +4,13 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 
+from textblob import TextBlob
+
 import credentials
 import numpy as np
 import pandas as pd
-import json
+import matplotlib.pyplot as plt
+import re
 
 
 class TwitterClient():  # TWITTER CLIENT
@@ -97,6 +100,19 @@ class TweetAnalyzer():
     Functionality for analyzing and categorizing content from tweets.
     """
 
+    def clean_tweet(self, tweet):
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+
+    def analyze_sentiment(self, tweet):
+        analysis = TextBlob(self.clean_tweet(tweet))
+
+        if analysis.sentiment.polarity > 0:
+            return 1
+        elif analysis.sentiment.polarity == 0:
+            return 0
+        else:
+            return -1
+
     def tweets_to_df(self, tweets):
         # Initialize df and loop through all tweet data for every column
 
@@ -106,51 +122,38 @@ class TweetAnalyzer():
         df['date'] = np.array([tweet.created_at for tweet in tweets])
         df['source'] = np.array([tweet.source for tweet in tweets])
         df['retweets'] = np.array([tweet.retweet_count for tweet in tweets])
-        # df['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
-
-        # 1st METHOD -
-        for tweet in tweets:
-            if 'retweeted_status' in tweets:
-                df['likes'] = df.append(pd.Series(tweet.retweeted_status.favorite_count), ignore_index=True)
-            else:
-                df['likes'] = df.append(pd.Series(tweet.favorite_count), ignore_index=True)
-
-        # # 2nd METHOD -
-        # df['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
-
+        df['likes'] = np.array([tweet.favorite_count for tweet in tweets])
         return df
-
-    # def get_tweet_likes(self, tweets):
-    #     likedf = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['tweets'])
-    #     try:
-    #         likedf['likes'] = np.array([tweet.retweeted_status.favorite_count for tweet in tweets])
-    #     except AttributeError:
-    #         likedf['likes'] = np.array([tweet.favorite_count for tweet in tweets])
-    #     return likedfni
-
 
 if __name__ == "__main__":
     twitter_client = TwitterClient()
     tweet_analyzer = TweetAnalyzer()
     api = twitter_client.get_twitter_client_api()
 
-    tweets = api.user_timeline(screen_name="realDonaldTrump", count=30)  # user_timeline fn to set username and count
-
-    # for i in range(100):
-    #     tweets = tweets_list[i]
-    #     tweets_str = json.dumps(tweets._json)
-    #     with open("Donald.json",'a') as tf:
-    #         tf.write(tweets_str)
-    #     print("Done %d" %i)
+    tweets = api.user_timeline(screen_name="BarackObama", count=200)  # user_timeline fn to set username and count
 
     tdf = tweet_analyzer.tweets_to_df(tweets)
-    # tdf = tweet_analyzer.get_tweet_likes(tweets)
-    print(tdf.likes)
+
+    # Sentiment Analysis
+    tdf['sentiment'] = np.array([tweet_analyzer.analyze_sentiment(tweet) for tweet in tdf['tweets']])
+    print(tdf[['tweets','sentiment']])
+    print('*'*70)
+
+    # Get average length of all tweets
+    print("The average length of a tweet is %d characters/tweet." %(np.mean(tdf['len'])))
+
+    # Get number of likes of the most liked tweet
+    print("The most liked tweet has %d likes." %(np.max(tdf['likes'])))
+
+    # Get most retweeted tweet
+    print("The most retweets any tweet has had is %d retweets." %(np.max(tdf['retweets'])))
+
+    # Time Series Analysis
+    time_likes = pd.Series(data=tdf['likes'].values, index = tdf['date'])
+    time_likes.plot(figsize=(16,4), label='Likes', legend=True)
+    time_retweets = pd.Series(data=tdf['retweets'].values, index = tdf['date'])
+    time_retweets.plot(figsize=(16,4), label='Retweets', legend=True)
+    plt.show()
 
 
-    # print(tweets[0].retweeted_status.favorite_count)
-    # # Get average length of all tweets
-    # print(np.mean(tdf['len']))
 
-    # # Get number of likes of the most liked tweet
-    # print(np.max(tdf['likes']))
