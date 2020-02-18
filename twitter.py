@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import re
 
 
-class TwitterClient():  # TWITTER CLIENT
+class TwitterClient:  # TWITTER CLIENT
     def __init__(self, twitter_user=None):
         self.auth = Twitter_Authenticator().authenticate_app()
         self.twitter_client = API(auth_handler = self.auth)
@@ -41,7 +41,7 @@ class TwitterClient():  # TWITTER CLIENT
         return home_timeline_tweets
 
 
-class Twitter_Authenticator():  # TWITTER AUTHENTICATOR
+class Twitter_Authenticator:  # TWITTER AUTHENTICATOR
     """
         Class for authenticating Twitter app.
     """
@@ -52,7 +52,7 @@ class Twitter_Authenticator():  # TWITTER AUTHENTICATOR
         return auth
 
 
-class TwitterStreamer():  # TWITTER STREAMER
+class TwitterStreamer:  # TWITTER STREAMER
     """
         Class for streaming and processing live streams.
     """
@@ -95,15 +95,17 @@ class TwitterListener(StreamListener): # TWITTER STREAM LISTENER
         print(status_code)
 
 
-class TweetAnalyzer():
+class TweetAnalyzer:
     """
     Functionality for analyzing and categorizing content from tweets.
     """
 
     def clean_tweet(self, tweet):
-        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+        # Cleaning the tweet of all non-useful characters and words including emails, etc
+        return ' '.join(re.sub(r"(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
 
     def analyze_sentiment(self, tweet):
+        # Perform sentiment analysis with TextBlob and return out based on polarity
         analysis = TextBlob(self.clean_tweet(tweet))
 
         if analysis.sentiment.polarity > 0:
@@ -125,6 +127,7 @@ class TweetAnalyzer():
         df['likes'] = np.array([tweet.favorite_count for tweet in tweets])
         return df
 
+
 if __name__ == "__main__":
     twitter_client = TwitterClient()
     tweet_analyzer = TweetAnalyzer()
@@ -135,25 +138,24 @@ if __name__ == "__main__":
     tdf = tweet_analyzer.tweets_to_df(tweets)
 
     # Sentiment Analysis
+    # Adding another column to the dataframe containing the sentiments
     tdf['sentiment'] = np.array([tweet_analyzer.analyze_sentiment(tweet) for tweet in tdf['tweets']])
-    print(tdf[['tweets','sentiment']])
+    print(tdf[['tweets', 'sentiment']])
     print('*'*70)
 
     # Get average length of all tweets
-    print("The average length of a tweet is %d characters/tweet." %(np.mean(tdf['len'])))
+    print("The average length of a tweet is %d characters/tweet." % (np.mean(tdf['len'])))
 
     # Get number of likes of the most liked tweet
-    print("The most liked tweet has %d likes." %(np.max(tdf['likes'])))
+    print("The most liked tweet has %d likes." % (np.max(tdf['likes'])))
 
     # Get most retweeted tweet
-    print("The most retweets any tweet has had is %d retweets." %(np.max(tdf['retweets'])))
+    print("The most retweets any tweet has had is %d retweets." % (np.max(tdf['retweets'])))
 
     # Time Series Analysis
-    time_likes = pd.Series(data=tdf['likes'].values, index = tdf['date'])
-    time_likes.plot(figsize=(16,4), label='Likes', legend=True)
-    time_retweets = pd.Series(data=tdf['retweets'].values, index = tdf['date'])
-    time_retweets.plot(figsize=(16,4), label='Retweets', legend=True)
+    # Plotting 'likes' and 'retweets' against index date for 200 tweets
+    time_likes = pd.Series(data=tdf['likes'].values, index=tdf['date'])
+    time_likes.plot(figsize=(16, 4), label='Likes', legend=True)
+    time_retweets = pd.Series(data=tdf['retweets'].values, index=tdf['date'])
+    time_retweets.plot(figsize=(16, 4), label='Retweets', legend=True)
     plt.show()
-
-
-

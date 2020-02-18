@@ -1,4 +1,5 @@
-# Variables that contain the user credentials to access Twitter API.
+# Variables that contain the user credentials to access Twitter API
+# Get your credentials at - https://developer.twitter.com/
 
 API_KEY = ""
 API_SECRET = ""

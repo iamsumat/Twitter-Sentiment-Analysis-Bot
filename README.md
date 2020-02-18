@@ -1,2 +1,2 @@
-# Twitter-Sentiment-Analysis-Bot
-A project to learn Sentiment Analysis fundamentals and Twitter API with Tweepy.
+# Twitter Sentiment Analysis Bot
+A project to implement Time Series and Sentiment Analysis fundamentals from Twitter API with Tweepy.
